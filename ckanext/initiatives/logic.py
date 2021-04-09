@@ -63,10 +63,7 @@ def access_granted():
 
 
 def access_denied():
-    return {
-        "success": False,
-        "msg": "Resource access restricted to registered users",
-    }
+    return {"success": False, "msg": "Resource access restricted to registered users"}
 
 
 def check_extra_args(nargs):
@@ -147,12 +144,36 @@ def apply_access_after(
         return access_denied()
 
 
+@check_extra_args(1)
+def apply_collaborator(user, resource_dict, package_dict, collaborator_org_name):
+    """
+    access to resources if the user is:
+      - a member of owner_org
+    OR
+      - the user is a member of `collaborator_org_name` (which can be used to track
+      users who are members of the collaborating organization
+    """
+
+    # must be logged in as a registered user
+    if not user:
+        return access_denied()
+
+    # check if the user is a member of the collaborating organization
+    user_orgs = UserOrganizations(user)
+    if collaborator_org_name and collaborator_org_name in user_orgs.org_names:
+        return access_granted()
+
+    # fall through: grant access if the user is a member of the owner_org
+    return apply_organization_member(user, resource_dict, package_dict)
+
+
 @check_extra_args(0)
 def apply_public(user, resource_dict, package_dict):
     return access_granted()
 
 
 PERMISSION_HANDLERS = {
+    "organization_member_or_collaborator": apply_collaborator,
     "organization_member_after_embargo": apply_access_after,
     "organization_member": apply_organization_member,
     "public": apply_public,
@@ -164,6 +185,7 @@ def parse_resource_permissions(permission_str):
     syntax is:
     handler_name:arg1:arg2
     """
+
     parts = [t.strip() for t in permission_str.split(":")]
     if len(parts) > 0:
         name, args = parts[0], parts[1:]
