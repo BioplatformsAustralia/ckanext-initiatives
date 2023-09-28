@@ -1,6 +1,7 @@
 # coding: utf8
 
 from __future__ import unicode_literals
+from six import string_types, text_type
 import ckan.authz as authz
 from ckan.common import _
 from ckan.common import config
@@ -36,7 +37,10 @@ class UserOrganizations:
 
 def get_key_maybe_extras(obj, name):
     # scheming may have put the field on 'extras'
-    extras = obj.get("extras", {})
+    if isinstance(obj.get("extras"), list):
+        extras = {str(k): text_type(v) for k, v in obj.get("extras", [])}
+    else:
+        extras = obj.get("extras", {})
     return obj.get(name, extras.get(name, ""))
 
 

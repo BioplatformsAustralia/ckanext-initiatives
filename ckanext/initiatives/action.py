@@ -61,7 +61,8 @@ def initiatives_check_access(context, data_dict):
     package_dict = ckan.logic.get_action("package_show")(
         dict(context, return_type="dict"), {"id": package_id}
     )
-    log.debug("checking resource")
+
+    log.debug("checking resource " + str(resource_id))
     resource_dict = ckan.logic.get_action("resource_show")(
         dict(context, return_type="dict"), {"id": resource_id}
     )
