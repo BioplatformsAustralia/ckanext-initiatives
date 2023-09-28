@@ -55,15 +55,30 @@ def initiatives_get_username_from_context(context):
     return user_name
 
 
-def access_granted():
-    return {"success": True}
+def access_granted(organization=None):
+    retval = {"success": True}
+
+    if organization:
+        retval["result"] = organization
+
+    return retval
 
 
-def access_denied():
-    return {
+def access_denied(organization=None):
+    retval = {
         "success": False,
         "msg": "Resource access restricted to registered users",
     }
+
+    if organization:
+        retval["result"] = organization
+    else:
+        retval["error"] = {
+            "__type": "Access Permissions Error",
+            "message": "Unable to determine permissions for access",
+        }
+
+    return retval
 
 
 def check_extra_args(nargs):
@@ -71,7 +86,7 @@ def check_extra_args(nargs):
         @functools.wraps(fn)
         def check(u, r, p, *args):
             if len(args) != nargs:
-                return access_denied()
+                return access_denied(None)
             return fn(u, r, p, *args)
 
         return check
@@ -83,7 +98,7 @@ def check_extra_args(nargs):
 def apply_organization_member(user, resource_dict, package_dict):
     # must be logged in as a registered user
     if not user:
-        return access_denied()
+        return access_denied(None)
 
     pkg_organization_id = package_dict.get("owner_org", "")
 
@@ -91,8 +106,8 @@ def apply_organization_member(user, resource_dict, package_dict):
     user_orgs = UserOrganizations(user)
 
     if pkg_organization_id in user_orgs.org_ids:
-        return access_granted()
-    return access_denied()
+        return access_granted(pkg_organization_id)
+    return access_denied(pkg_organization_id)
 
 
 @check_extra_args(3)
@@ -110,12 +125,12 @@ def apply_access_after(
 
     # must be logged in as a registered user
     if not user:
-        return access_denied()
+        return access_denied(None)
 
     # check if the user is a full consortium member
     user_orgs = UserOrganizations(user)
     if consortium_org_name and consortium_org_name in user_orgs.org_names:
-        return access_granted()
+        return access_granted(consortium_org_name)
 
     # check if the data is out of embargo
     try:
@@ -132,7 +147,7 @@ def apply_access_after(
 
     # we can't work out the dates: deny access
     if days is None or dt is None:
-        return access_denied()
+        return access_denied(None)
 
     today = datetime.date.today()
     d_days = (today - dt).days
@@ -141,7 +156,7 @@ def apply_access_after(
         return apply_organization_member(user, resource_dict, package_dict)
     else:
         # data in embargo: deny access
-        return access_denied()
+        return access_denied(consortium_org_name)
 
 
 @check_extra_args(0)
