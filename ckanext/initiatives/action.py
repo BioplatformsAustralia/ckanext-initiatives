@@ -52,6 +52,8 @@ def initiatives_check_access(context, data_dict):
 
     user_name = logic.initiatives_get_username_from_context(context)
 
+    site_user = ckan.logic.get_action("get_site_user")({"ignore_auth": True}, {})["name"]
+
     if not package_id:
         raise ckan.logic.ValidationError("Missing package_id")
     if not resource_id:
@@ -63,8 +65,14 @@ def initiatives_check_access(context, data_dict):
     )
 
     log.debug("checking resource " + str(resource_id))
+    # Note: context is running as the site user in case current user has no access to the package
+    resource_ctx = {
+        "user": site_user,
+        "auth_user_obj": site_user,
+    }
+
     resource_dict = ckan.logic.get_action("resource_show")(
-        dict(context, return_type="dict"), {"id": resource_id}
+        dict(resource_ctx, return_type="dict"), {"id": resource_id}
     )
 
     return logic.initiatives_check_user_resource_access(

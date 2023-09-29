@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 from six import string_types, text_type
+from inspect import currentframe, getframeinfo
 import ckan.authz as authz
 from ckan.common import _
 from ckan.common import config
@@ -65,6 +66,12 @@ def access_granted(organization=None):
 
 
 def access_denied(organization=None):
+    # log calling location to assist debugging
+    cf = currentframe()
+    log.debug(
+        "access denied %d %s" % (cf.f_back.f_lineno, getframeinfo(cf.f_back).filename)
+    )
+
     retval = {
         "success": False,
         "msg": "Resource access restricted to registered users",
