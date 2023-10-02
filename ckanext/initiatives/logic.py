@@ -68,7 +68,7 @@ def access_granted(organization=None):
 def access_denied(organization=None):
     # log calling location to assist debugging
     cf = currentframe()
-    log.debug(
+    log.info(
         "access denied %d %s" % (cf.f_back.f_lineno, getframeinfo(cf.f_back).filename)
     )
 
