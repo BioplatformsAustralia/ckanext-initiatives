@@ -34,7 +34,7 @@ def initiatives_resource_view_list(context, data_dict):
     id = _get_or_bust(data_dict, "id")
     resource = model.Resource.get(id)
     if not resource:
-        raise NotFound
+        return []
     authorized = auth.initiatives_resource_show(
         context, {"id": resource.get("id"), "resource": resource}
     ).get("success", False)
