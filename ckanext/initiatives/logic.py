@@ -7,7 +7,6 @@ import ckan.authz as authz
 from ckan.common import _
 from ckan.common import config
 
-from ckan.lib.base import render_jinja2
 import ckan.lib.mailer as mailer
 import ckan.logic as logic
 import ckan.plugins.toolkit as toolkit
