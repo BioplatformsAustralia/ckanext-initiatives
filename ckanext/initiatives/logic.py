@@ -34,7 +34,22 @@ class UserOrganizations:
             org_id = org.get("id")
             if org_id is not None:
                 self.org_ids.add(org_id)
-
+                # If the org has a parent, add the parent to the list of orgs.
+                # This allows users that are members of organizations with a parent of a consortium level org
+                # to access embargoed data.
+                # Implemented to facilitate AAI implementation of groups that are separate from exsiting CKAN access
+                org_show_dict = {"id": org_id}
+                # Do not query for the group datasets when dictizing, as they will
+                # be ignored and get requested on the controller anyway
+                org_show_dict["include_datasets"] = False
+                org_show_dict["include_users"] = False
+                org_show_dict["include_extras"] = True
+                org_with_extras = logic.get_action("organization_show")(context, org_show_dict)
+                if (org_with_extras):
+                    for group in org_with_extras["groups"]:
+                         parent_name = group.get("name")
+                         if parent_name is not None:
+                             self.org_names.add(parent_name)
 
 def get_key_maybe_extras(obj, name):
     # scheming may have put the field on 'extras'
