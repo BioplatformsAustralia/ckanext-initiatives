@@ -14,5 +14,13 @@ log = logging.getLogger(__name__)
 
 @pytest.mark.ckan_config("ckan.plugins", "initiatives")
 @pytest.mark.usefixtures("with_plugins", "with_request_context")
-class TestIniativesHelpers(object):
-    pass
+class TestInitativesHelpers(object):
+    def test_initiatives_get_user_id(self):
+        user = factories.User()
+
+        userobj = model.User.by_name(user["name"])
+
+        g.user = user["name"]
+        g.userobj = userobj
+
+        assert initiatives_helpers.initiatives_get_user_id() == user["name"]
