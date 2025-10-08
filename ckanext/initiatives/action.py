@@ -8,6 +8,7 @@ from ckan.common import config
 from ckan.lib.mailer import mail_recipient
 from ckan.lib.mailer import MailerException
 import ckan.logic
+import ckan.model as model
 from ckan.logic.action.create import user_create
 from ckan.logic.action.get import package_search
 from ckan.logic.action.get import package_show
@@ -52,6 +53,7 @@ def initiatives_check_access(context, data_dict):
     user_name = logic.initiatives_get_username_from_context(context)
 
     site_user = ckan.logic.get_action("get_site_user")({"ignore_auth": True}, {})["name"]
+    site_userobj = model.User.by_name(site_user)
 
     if not package_id:
         raise ckan.logic.ValidationError("Missing package_id")
@@ -67,7 +69,7 @@ def initiatives_check_access(context, data_dict):
     # Note: context is running as the site user in case current user has no access to the package
     resource_ctx = {
         "user": site_user,
-        "auth_user_obj": site_user,
+        "auth_user_obj": site_userobj,
     }
 
     resource_dict = ckan.logic.get_action("resource_show")(
