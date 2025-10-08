@@ -7,7 +7,6 @@ import ckan.authz as authz
 from ckan.common import _
 from ckan.common import config
 
-from ckan.lib.base import render_jinja2
 import ckan.lib.mailer as mailer
 import ckan.logic as logic
 import ckan.plugins.toolkit as toolkit
@@ -162,9 +161,7 @@ def apply_access_after(
     dt_str = get_key_maybe_extras(package_dict, field_name)
     try:
         dt = datetime.datetime.strptime(dt_str, "%Y-%m-%d").date()
-    except ValueError:
-        dt = None
-    except TypeError:
+    except (ValueError, TypeError) as e:
         dt = None
 
     # we can't work out the dates: deny access
@@ -199,11 +196,13 @@ def parse_resource_permissions(permission_str):
     handler_name:arg1:arg2
     """
     parts = [t.strip() for t in permission_str.split(":")]
+
+    name = ""
+    args = []
+
     if len(parts) > 0:
         name, args = parts[0], parts[1:]
-    else:
-        name = ""
-        args = []
+
     # a safe, restrictive default: we never seek to restrict
     # data beyond organization members
     if name not in PERMISSION_HANDLERS:
