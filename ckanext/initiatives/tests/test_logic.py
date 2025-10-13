@@ -146,6 +146,71 @@ class TestInitiativesLogic(object):
         assert result.get("success") == True
 
     @pytest.mark.usefixtures("clean_db")
+    def test_apply_access_after_consortium_member_subgroup(self):
+        user = factories.User()
+        user2 = factories.User()
+        user3 = factories.User()
+        owner_org = factories.Organization(
+            users=[{"name": user["id"], "capacity": "member"}]
+        )
+        consortium_org = factories.Organization(
+            parent=owner_org["name"],
+            users=[
+                {
+                    "name": user2["id"],
+                    "capacity": "member",
+                }
+            ],
+        )
+        sub_org = factories.Organization(
+            parent=consortium_org["name"],
+            users=[
+                {
+                    "name": user3["id"],
+                    "capacity": "member",
+                }
+                ],
+            groups=[consortium_org,]
+        )
+
+        package = factories.Dataset(owner_org=owner_org["id"])
+        resource = factories.Resource(package_id=package["id"])
+        field_name = "date_of_transfer_to_archive"
+        package[field_name] = "2025-09-30"
+        consortium_org_name = consortium_org["name"]
+        days = 7
+
+        # sub org user
+        with freeze_time("2025-10-03 23:30:00"):
+
+            result = initiatives_logic.apply_access_after(
+                user3["name"], resource, package, field_name, days, consortium_org_name
+            )
+
+        assert result.get("success") == True
+        assert result.get("result") == consortium_org_name
+
+        # Consortium user
+
+        with freeze_time("2025-10-03 23:30:00"):
+            result = initiatives_logic.apply_access_after(
+                user2["name"], resource, package, field_name, days, consortium_org_name
+            )
+
+        assert result.get("success") == True
+        assert result.get("result") == consortium_org_name
+
+        # regular user in embargo
+
+        with freeze_time("2025-10-03 23:30:00"):
+            result = initiatives_logic.apply_access_after(
+                user["name"], resource, package, field_name, days, consortium_org_name
+            )
+
+        assert result.get("success") == False
+        assert result.get("result") == consortium_org_name
+
+    @pytest.mark.usefixtures("clean_db")
     def test_apply_access_after_embargo(self):
         user = factories.User()
         user2 = factories.User()

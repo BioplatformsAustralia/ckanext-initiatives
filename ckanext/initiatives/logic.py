@@ -45,6 +45,7 @@ class UserOrganizations:
                 org_show_dict["include_extras"] = True
                 org_with_extras = logic.get_action("organization_show")(context, org_show_dict)
                 if (org_with_extras):
+                    print(str(org_with_extras))
                     for group in org_with_extras["groups"]:
                          parent_name = group.get("name")
                          if parent_name is not None:
