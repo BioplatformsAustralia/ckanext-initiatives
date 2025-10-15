@@ -14,6 +14,9 @@ log = getLogger(__name__)
 @toolkit.auth_allow_anonymous_access
 def initiatives_resource_show(context, data_dict=None):
     resource = data_dict.get("resource", context.get("resource", {}))
+    # some older datatypes like wheat do not return a resource from the above, so try this:
+    if not resource:
+        resource = logic_auth.get_resource_object(context, data_dict)
     if not isinstance(resource, dict):
         resource = resource.as_dict()
 
