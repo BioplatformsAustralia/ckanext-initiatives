@@ -42,10 +42,12 @@ class UserOrganizations:
                 # be ignored and get requested on the controller anyway
                 org_show_dict["include_datasets"] = False
                 org_show_dict["include_users"] = False
-                org_show_dict["include_extras"] = True
-                org_with_extras = logic.get_action("organization_show")(context, org_show_dict)
-                if (org_with_extras):
-                    for group in org_with_extras["groups"]:
+                org_show_dict["include_dataset_count"] = False
+                org_show_dict["include_extras"] = False
+                org_show_dict["include_groups"] = True
+                org_with_groups = logic.get_action("organization_show")(context, org_show_dict)
+                if (org_with_groups):
+                    for group in org_with_groups["groups"]:
                          parent_name = group.get("name")
                          if parent_name is not None:
                              self.org_names.add(parent_name)
